@@ -12,11 +12,10 @@ import (
 )
 
 func check(e error) {
-    if e != nil {
-        panic(e)
-    }
+	if e != nil {
+		panic(e)
+	}
 }
-
 
 func mkRotation(data string) int {
 	switch string(data[0]) {
@@ -42,19 +41,38 @@ func mod(n, d int) int {
 	}
 }
 
+func abs(k int) int {
+	if k < 0 {
+		return -k
+	} else {
+		return k
+	}
+}
+
+func countClicks(init, rot int) int {
+	int_div := abs((init + rot) / 100)
+	if init+rot <= 0 && init != 0 {
+		int_div += 1
+	}
+	return int_div
+}
+
 func foo() {
 	path := filepath.Join("day1.in")
-    dat, err := os.ReadFile(path)
+	dat, err := os.ReadFile(path)
 	check(err)
 	data := strings.Split(string(dat), "\n")
 	count := 0
+	clicks := 0
 	sum := 50
 	for _, d := range data {
 		r := mkRotation(d)
-		sum = mod(sum + r, 100)
+		clicks += countClicks(sum, r)
+		sum = mod(sum+r, 100)
 		if sum == 0 {
 			count++
 		}
 	}
 	fmt.Printf("Password: %d\n", count)
+	fmt.Printf("Password (CLICKS): %d\n", clicks)
 }
