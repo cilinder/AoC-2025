@@ -1,21 +1,12 @@
 package main
 
 import (
-	// "bufio"
-	// "fmt"
-	// "io"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
 )
-
-func check(e error) {
-	if e != nil {
-		panic(e)
-	}
-}
 
 func mkRotation(data string) int {
 	switch string(data[0]) {
