@@ -10,7 +10,6 @@ func check(e error) {
 	}
 }
 
-
 func toInt(s string) int {
 	i, err := strconv.Atoi(s)
 	check(err)
@@ -23,5 +22,5 @@ func toStr(i int) string {
 }
 
 func main() {
-	day2()
+	day3()
 }
