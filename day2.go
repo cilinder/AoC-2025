@@ -5,6 +5,7 @@ import (
 	"math"
 	"os"
 	"path/filepath"
+	"slices"
 	"strconv"
 	"strings"
 )
@@ -12,6 +13,7 @@ import (
 type Range struct {
 	start int
 	end   int
+	repeats []int
 }
 
 func mkRange(data string) Range {
@@ -20,7 +22,7 @@ func mkRange(data string) Range {
 	check(err)
 	end, err := strconv.Atoi(vals[1])
 	check(err)
-	return Range{start, end}
+	return Range{start, end, make([]int, 0)}
 }
 
 func nextNumber(num int) int {
@@ -86,18 +88,79 @@ func findRepeats(start, end int) int {
 	return total
 }
 
+func maxOfRanges(ranges []Range) int {
+	max := 0
+	for _, r := range ranges {
+		if r.end >= max {
+			max = r.end
+		}
+	}
+	return max
+}
+
+func (rng Range) contains(candidate int) bool {
+	return rng.start <= candidate && candidate <= rng.end
+}
+
+func generateDuplicates(width int, ranges []Range) {
+	m := maxOfRanges(ranges)
+	mLen := len(toStr(m))
+	first := int(math.Pow10(width-1)) 
+	last := int(math.Pow10(width)) - 1
+	fmt.Printf("Generating duplicates from %d to %d\n", first, last)
+	for number := first; number <= last; number++ {
+		for i := 2; i <= mLen / width; i++ {
+			candidate := toInt(strings.Repeat(toStr(number), i))
+			
+			for j := range ranges {
+				if ranges[j].contains(candidate) && !slices.Contains(ranges[j].repeats, candidate) {
+					ranges[j].repeats = append(ranges[j].repeats, candidate)
+				}
+			}
+		}
+	}
+}
+
+func generateAllDuplicates(ranges []Range) {
+	m := maxOfRanges(ranges)
+	mLen := len(toStr(m))
+	for width := 1; width <= mLen / 2; width++ {
+		generateDuplicates(width, ranges)
+	}
+}
+
+func sumRepeats(ranges []Range) int {
+	total := 0
+	for	_, rng := range ranges {
+		for _, num := range rng.repeats {
+			total += num
+		}
+	} 
+	return total
+}
+
+func printRanges(ranges []Range) {
+	for _, rng := range ranges {
+		fmt.Printf("{%d, %d, %v}\n", rng.start, rng.end, rng.repeats)
+	}
+}
+
 func day2() {
 	path := filepath.Join("day2.in")
 	dat, err := os.ReadFile(path)
 	check(err)
 	data := strings.Split(string(dat), ",")
 	total := 0
+	ranges := make([]Range, 0)
 	for _, d := range data {
 		rng := mkRange(d)
+		ranges = append(ranges, rng)
 		start := nextNumber(rng.start)
 		end := prevNumber(rng.end)
 		repeats := findRepeats(start, end)
 		total += repeats
 	}
-	fmt.Println(total)
+	generateAllDuplicates(ranges)
+	printRanges(ranges)
+	fmt.Printf("Password is: %d\n", sumRepeats(ranges))
 }
