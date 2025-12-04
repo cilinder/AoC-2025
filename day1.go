@@ -49,7 +49,7 @@ func countClicks(init, rot int) int {
 }
 
 func foo() {
-	path := filepath.Join("day1.in")
+	path := filepath.Join("inputs", "day1.in")
 	dat, err := os.ReadFile(path)
 	check(err)
 	data := strings.Split(string(dat), "\n")

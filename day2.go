@@ -11,8 +11,8 @@ import (
 )
 
 type Range struct {
-	start int
-	end   int
+	start   int
+	end     int
 	repeats []int
 }
 
@@ -105,13 +105,12 @@ func (rng Range) contains(candidate int) bool {
 func generateDuplicates(width int, ranges []Range) {
 	m := maxOfRanges(ranges)
 	mLen := len(toStr(m))
-	first := int(math.Pow10(width-1)) 
+	first := int(math.Pow10(width - 1))
 	last := int(math.Pow10(width)) - 1
-	fmt.Printf("Generating duplicates from %d to %d\n", first, last)
 	for number := first; number <= last; number++ {
-		for i := 2; i <= mLen / width; i++ {
+		for i := 2; i <= mLen/width; i++ {
 			candidate := toInt(strings.Repeat(toStr(number), i))
-			
+
 			for j := range ranges {
 				if ranges[j].contains(candidate) && !slices.Contains(ranges[j].repeats, candidate) {
 					ranges[j].repeats = append(ranges[j].repeats, candidate)
@@ -124,18 +123,18 @@ func generateDuplicates(width int, ranges []Range) {
 func generateAllDuplicates(ranges []Range) {
 	m := maxOfRanges(ranges)
 	mLen := len(toStr(m))
-	for width := 1; width <= mLen / 2; width++ {
+	for width := 1; width <= mLen/2; width++ {
 		generateDuplicates(width, ranges)
 	}
 }
 
 func sumRepeats(ranges []Range) int {
 	total := 0
-	for	_, rng := range ranges {
+	for _, rng := range ranges {
 		for _, num := range rng.repeats {
 			total += num
 		}
-	} 
+	}
 	return total
 }
 
@@ -146,7 +145,7 @@ func printRanges(ranges []Range) {
 }
 
 func day2() {
-	path := filepath.Join("day2.in")
+	path := filepath.Join("inputs", "day2.in")
 	dat, err := os.ReadFile(path)
 	check(err)
 	data := strings.Split(string(dat), ",")
@@ -161,6 +160,5 @@ func day2() {
 		total += repeats
 	}
 	generateAllDuplicates(ranges)
-	printRanges(ranges)
 	fmt.Printf("Password is: %d\n", sumRepeats(ranges))
 }
