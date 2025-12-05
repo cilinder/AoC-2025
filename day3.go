@@ -7,32 +7,28 @@ import (
 	"strings"
 )
 
-func maxJoltage(bank string) int {
+func maxJoltage(bank string, numBatteries int) int {
 	n := len(bank)
-	max := 0
-	sndMax := 0
-	var iMax int
-	for i := 0; i < n-1; i++ {
-		digit := toInt(string(bank[i]))
-		if digit > max {
-			max = digit
-			iMax = i
+	joltage := 0
+	iMax := -1
+	for battery := numBatteries; battery > 0; battery-- {
+		max := 0
+		for i := iMax+1; i < n-battery+1; i++ {
+			digit := toInt(string(bank[i]))
+			if digit > max {
+				max = digit
+				iMax = i
+			}
 		}
+		joltage = joltage * 10 + max
 	}
-	for i := iMax + 1; i < n; i++ {
-		digit := toInt(string(bank[i]))
-		if digit > sndMax {
-			sndMax = digit
-		}
-	}
-	return max*10 + sndMax
-
+	return joltage
 }
 
-func totalJoltage(rows []string) int {
+func totalJoltage(rows []string, numBatteries int) int {
 	total := 0
 	for _, bank := range rows {
-		total += maxJoltage(bank)
+		total += maxJoltage(bank, numBatteries)
 	}
 	return total
 }
@@ -42,6 +38,6 @@ func day3() {
 	dat, err := os.ReadFile(path)
 	check(err)
 	rows := strings.Split(string(dat), "\n")
-	joltage := totalJoltage(rows)
+	joltage := totalJoltage(rows, 12)
 	fmt.Println(joltage)
 }
