@@ -102,6 +102,39 @@ func connect(points []Point, maxConns int) []int {
 	return sets
 }
 
+func countComponents(sets []int) int {
+	for i := range sets {
+		sets[i] = findRoot(i, sets)
+	}
+	counted := make([]int, 0)
+	count := 0
+	for _, el := range sets {
+		if !slices.Contains(counted, el) {
+			count += 1
+			counted = append(counted, el)
+		}
+	}
+	return count
+}
+
+func connectAll(points []Point) int {
+	dists := distances(points)
+	sets := initSets(len(points))
+	var p, q int
+	for i := 0; i < len(dists) && countComponents(sets) > 1; i++ {
+		p = dists[i][1]
+		q = dists[i][2]
+		pRoot := findRoot(p, sets)
+		qRoot := findRoot(q, sets)
+		// fmt.Printf("Connecting %d (%d, %d, %d) and %d (%d, %d, %d)\n",
+		// p, points[p].x, points[p].y, points[p].z, q, points[q].x, points[q].y, points[q].z)
+		sets[pRoot] = qRoot
+		// fmt.Println(sets)
+		// fmt.Println()
+	}
+	return points[p].x * points[q].x
+}
+
 func countDistinct(lst []int) map[int]int {
 	groupCounts := make(map[int]int)
 	for _, el := range lst {
@@ -146,4 +179,7 @@ func day8() {
 	counts := countDistinct(sets)
 	fst, snd, trd := find3Largest(maps.Values(counts))
 	fmt.Printf("Result part 1: %d\n", fst*snd*trd)
+	part2 := connectAll(points)
+	fmt.Printf("Result part 2: %d\n", part2)
+
 }
