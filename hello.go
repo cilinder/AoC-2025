@@ -22,5 +22,5 @@ func toStr(i int) string {
 }
 
 func main() {
-	day8()
+	day9()
 }
