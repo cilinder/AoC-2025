@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"slices"
 	"strings"
 )
 
@@ -43,10 +44,13 @@ func parseData(data string) ([]bool, [][]int, []int) {
 	return lights, buttons, joltage
 }
 
-func toggleLights(lights []bool, button []int) {
+func toggleLights(lights []bool, button []int) []bool {
+	newLights := make([]bool, len(lights))
+	copy(newLights, lights)
 	for _, b := range button {
-		lights[b] = !lights[b]
+		newLights[b] = !lights[b]
 	}
+	return newLights
 }
 
 func boolArrayEq(arr1, arr2 []bool) bool {
@@ -65,23 +69,23 @@ func fewestPresses(targetLights []bool, buttons [][]int) int {
 	var solve func(state []bool, i int) int
 
 	solve = func(state []bool, i int) int {
-		if i >= len(buttons) {
-			return -1
-		}
 		if boolArrayEq(state, targetLights) {
 			return 0
 		}
+		if i >= len(buttons) {
+			return -1
+		}
 		// Try not toggling
 		notToggle := solve(state, i+1)
-		toggleLights(state, buttons[i])
-		toggle := solve(state, i+1)
-		toggleLights(state, buttons[i]) // Reverse
+		// Try toggling
+		toggledState := toggleLights(state, buttons[i])
+		toggle := solve(toggledState, i+1)
 		if notToggle < 0 && toggle < 0 {
 			return -1
-		} else if notToggle < 0 || toggle < 0 {
-			return max(toggle, notToggle) + 1
+		} else if toggle >= 0 && (notToggle < 0 || notToggle > toggle) {
+			return toggle + 1
 		} else {
-			return min(toggle, notToggle) + 1
+			return notToggle
 		}
 
 	}
@@ -90,13 +94,104 @@ func fewestPresses(targetLights []bool, buttons [][]int) int {
 	return solve(init, 0)
 }
 
+func joltTooBig(state, target []int) bool {
+	for i := range target {
+		if state[i] > target[i] {
+			return true
+		}
+	}
+	return false
+}
+
+func increaseJoltage(state []int, button []int) []int {
+	newState := make([]int, len(state))
+	copy(newState, state)
+	for _, b := range button {
+		newState[b]++
+	}
+	return newState
+}
+
+func makeString(state []int) string {
+	str := ""
+	for _, elt := range state {
+		str += toStr(elt) + " "
+	}
+	return str
+}
+
+type memoKey struct {
+	state  string
+	button int
+}
+
+func fewestJoltagePresses(targetJoltage []int, buttons [][]int) int {
+	memo := make(map[memoKey]int)
+	var solve func(state []int, i int) int
+	solve = func(state []int, i int) int {
+		key := memoKey{makeString(state), i}
+		val, ok := memo[key]
+		if ok {
+			fmt.Println("using existing value")
+			return val
+		}
+		if slices.Equal(state, targetJoltage) {
+			memo[key] = 0
+			return 0
+		}
+		if joltTooBig(state, targetJoltage) || i >= len(buttons) {
+			memo[key] = -1
+			return -1
+		}
+
+		// Skip the button, go to the next one.
+		noPress := solve(state, i+1)
+
+		// Press the button, don't move to the next one.
+		newState := increaseJoltage(state, buttons[i])
+		press := solve(newState, i)
+
+		if noPress < 0 && press < 0 {
+			memo[key] = -1
+			return -1
+		} else if press >= 0 && (noPress < 0 || press < noPress) {
+			memo[key] = press + 1
+			return press + 1
+		} else {
+			memo[key] = noPress
+			return noPress
+		}
+	}
+	init := make([]int, len(targetJoltage))
+	return solve(init, 0)
+}
+
 func day10() {
-	fileName := path.Join("inputs", "day10_sample.in")
+	fileName := path.Join("inputs", "day10.in")
 	content, err := os.ReadFile(fileName)
 	check(err)
 	lines := strings.Split(string(content), "\n")
+	totalPresses := 0
+	totalJoltPresses := 0
 	for _, line := range lines {
-		target, buttons, _ := parseData(line)
-		fmt.Println(fewestPresses(target, buttons))
+		target, buttons, joltage := parseData(line)
+		totalPresses += fewestPresses(target, buttons)
+		totalJoltPresses += fewestJoltagePresses(joltage, buttons)
+		// init := make([]int, len(joltage))
+		// init = increaseJoltage(init, buttons[0])
+		// init = increaseJoltage(init, buttons[1])
+		// init = increaseJoltage(init, buttons[1])
+		// init = increaseJoltage(init, buttons[1])
+		// fmt.Println(init, slices.Equal(init, joltage))
+		// init = increaseJoltage(init, buttons[3])
+		// init = increaseJoltage(init, buttons[3])
+		// init = increaseJoltage(init, buttons[3])
+		// init = increaseJoltage(init, buttons[4])
+		// init = increaseJoltage(init, buttons[5])
+		// init = increaseJoltage(init, buttons[5])
+		// fmt.Println(init, slices.Equal(init, joltage))
+		break
 	}
+	fmt.Println("Total minimal number of presses:", totalPresses)
+	fmt.Println("Total minimal number of presses for joltage match:", totalJoltPresses)
 }
